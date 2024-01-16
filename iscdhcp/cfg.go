@@ -1,10 +1,8 @@
-package cfg
+package iscdhcp
 
 import (
 	"bufio"
 	"fmt"
-	"github.com/timtadh/lexmachine"
-	"github.com/xaionaro-go/isccfg"
 	"io"
 	"log"
 	"net"
@@ -13,6 +11,9 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/timtadh/lexmachine"
+	"github.com/xaionaro-go/isccfg"
 )
 
 type Range struct {

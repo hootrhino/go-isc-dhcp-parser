@@ -1,11 +1,13 @@
 package main
 
 import (
-	"github.com/xaionaro-go/iscDhcp"
+	"github.com/hootrhino/go-isc-dhcp/iscdhcp"
+	"testing"
 )
 
-func main() {
-	dhcp := iscDhcp.NewDHCP()
+// go test -timeout 30s -run ^Test_parse_isc_conf github.com/hootrhino/go-isc-dhcp/test -v -count=1
+func Test_parse_isc_conf(t *testing.T) {
+	dhcp := iscdhcp.NewDHCP("./iscdhcp.conf")
 	err := dhcp.ReloadConfig()
 	if err != nil {
 		panic(err)
@@ -15,6 +17,7 @@ func main() {
 		panic(err)
 	}
 }
+
 /*
 import (
 	"encoding/json"

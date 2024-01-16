@@ -1,4 +1,4 @@
-package iscDhcp
+package iscdhcp
 
 import (
 	"bufio"
@@ -6,15 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/mitchellh/go-ps"
-	"github.com/xaionaro-go/iscDhcp/cfg"
-	"sync"
-	"time"
 	"os"
 	"os/exec"
+	"sync"
+	"time"
 )
 
 const (
-	CFG_PATH = "/etc/dhcp/dhcpd-dynamic.conf"
+// CFG_PATH = "/etc/dhcp/dhcpd-dynamic.conf"
 )
 
 const (
@@ -31,13 +30,19 @@ var (
 type Status int
 
 type DHCP struct {
-	Config   *cfg.Config
+	path     string
+	Config   *Config
 	runMutex *sync.Mutex
 	cfgMutex *sync.Mutex
 }
 
-func NewDHCP() *DHCP {
-	return &DHCP{Config: cfg.NewConfig(), runMutex: &sync.Mutex{}, cfgMutex: &sync.Mutex{}}
+func NewDHCP(path string) *DHCP {
+	return &DHCP{
+		Config:   NewConfig(),
+		path:     path,
+		runMutex: &sync.Mutex{},
+		cfgMutex: &sync.Mutex{},
+	}
 }
 
 func (dhcp *DHCP) ReloadConfig() error {
@@ -46,7 +51,7 @@ func (dhcp *DHCP) ReloadConfig() error {
 	return dhcp.reloadConfig()
 }
 func (dhcp *DHCP) reloadConfig() error {
-	return dhcp.Config.LoadFrom(CFG_PATH)
+	return dhcp.Config.LoadFrom(dhcp.path)
 }
 func (dhcp DHCP) SaveConfig() error {
 	dhcp.runLock()
@@ -56,7 +61,7 @@ func (dhcp DHCP) SaveConfig() error {
 	return dhcp.saveConfig()
 }
 func (dhcp DHCP) saveConfig() error {
-	return dhcp.Config.ConfigWriteTo(CFG_PATH)
+	return dhcp.Config.ConfigWriteTo(dhcp.path)
 }
 func (dhcp DHCP) findProcess() *os.Process {
 	processes, err := ps.Processes()
@@ -129,14 +134,14 @@ func (dhcp DHCP) stopProcess() error {
 	if process == nil {
 		return nil
 	}
-	defer func(){
+	defer func() {
 		os.Remove("/var/run/dhcpd.pid")
 	}()
 	process.Kill()
 
 	i := 0
-	for dhcp.findProcess() != nil {	// 10 seconds timeout
-		if (i > 100) {
+	for dhcp.findProcess() != nil { // 10 seconds timeout
+		if i > 100 {
 			return ErrCannotStop
 		}
 		time.Sleep(time.Millisecond * 100)
@@ -177,7 +182,7 @@ func (dhcp DHCP) cfgUnlock() {
 	dhcp.cfgMutex.Unlock()
 }
 
-func (dhcp DHCP) SetConfig(cfg cfg.Root) {
+func (dhcp DHCP) SetConfig(cfg Root) {
 	dhcp.cfgLock()
 	defer dhcp.cfgUnlock()
 	dhcp.Config.Root = cfg
